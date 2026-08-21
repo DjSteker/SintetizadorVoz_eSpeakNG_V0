@@ -5,6 +5,7 @@
  *      Author: usuario001
  */
 
+// Nuevo contenido de src/config.cpp (agregado parseo/guardado de claves de audio)
 #include "config.hpp"
 
 #include <cctype>
@@ -18,10 +19,6 @@ namespace Configuracion {
 
 namespace {
 
-// Devuelve el directorio que contiene el ejecutable en curso, leyendo el
-// enlace simbólico /proc/self/exe (específico de Linux). Si por algún
-// motivo no se puede resolver, se usa el directorio de trabajo actual
-// como último recurso, para que la aplicación nunca deje de funcionar.
 std::string obtener_directorio_ejecutable() {
 	char buffer[PATH_MAX];
 	ssize_t longitud = readlink("/proc/self/exe", buffer, sizeof(buffer) - 1);
@@ -58,6 +55,13 @@ bool guardar_configuracion(const AppConfig &config) {
 	archivo << "pitch=" << config.tono << "\n";
 	archivo << "volume=" << config.volumen << "\n";
 	archivo << "speak_status=" << (config.leer_estado ? "1" : "0") << "\n";
+
+	/* Guardar parámetros de audio */
+	archivo << "sample_rate=" << config.sample_rate << "\n";
+	archivo << "channels=" << config.channels << "\n";
+	archivo << "audio_buffer_frames=" << config.audio_buffer_frames << "\n";
+	archivo << "audio_backend=" << config.audio_backend << "\n";
+
 	return true;
 }
 
@@ -90,6 +94,14 @@ AppConfig cargar_configuracion() {
 				config.volumen = std::stoi(valor);
 			} else if (clave == "speak_status") {
 				config.leer_estado = (valor == "1");
+			} else if (clave == "sample_rate") {
+				config.sample_rate = std::stoi(valor);
+			} else if (clave == "channels") {
+				config.channels = std::stoi(valor);
+			} else if (clave == "audio_buffer_frames") {
+				config.audio_buffer_frames = std::stoi(valor);
+			} else if (clave == "audio_backend") {
+				config.audio_backend = valor;
 			}
 		} catch (const std::exception &e) {
 			std::cerr << "Aviso: valor inválido para '" << clave << "' en " << ruta << " ("
@@ -105,9 +117,6 @@ bool existe_configuracion_guardada() {
 }
 
 std::string detectar_idioma_sistema() {
-	// Mismo orden de precedencia que usa `locale`/gettext: LC_ALL manda
-	// sobre LC_MESSAGES, que a su vez manda sobre LANG; LANGUAGE es una
-	// extensión de GNU con una lista de preferencias separadas por ':'.
 	static const char *variables_entorno[] = {"LC_ALL", "LC_MESSAGES", "LANG", "LANGUAGE"};
 	for (const char *variable : variables_entorno) {
 		const char *valor = std::getenv(variable);
@@ -116,7 +125,7 @@ std::string detectar_idioma_sistema() {
 		}
 		std::string locale_str(valor);
 		if (locale_str == "C" || locale_str == "POSIX") {
-			continue; // No indica un idioma real.
+			continue;
 		}
 		size_t pos_separador = locale_str.find(':');
 		if (pos_separador != std::string::npos) {
