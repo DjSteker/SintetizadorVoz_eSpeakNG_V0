@@ -2,7 +2,7 @@
  * lector_archivos.hpp
  *
  *  Created on: 28 jul 2026
- *      Author: usuario001
+ *      Author: DjSteker
  */
 
 /**
