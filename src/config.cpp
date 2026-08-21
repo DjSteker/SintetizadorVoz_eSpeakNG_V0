@@ -5,7 +5,6 @@
  *      Author: usuario001
  */
 
-// Nuevo contenido de src/config.cpp (agregado parseo/guardado de claves de audio)
 #include "config.hpp"
 
 #include <cctype>
